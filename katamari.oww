@@ -1,0 +1,55 @@
+variables
+{
+	global:
+		19: match_map_time
+}
+
+rule("15m map timer")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+	}
+
+	actions
+	{
+		Global.match_map_time = 900;
+		Chase Global Variable At Rate(match_map_time, 0, 1, Destination and Rate);
+		While(!Global.match_map_time);
+			Wait(5, Ignore Condition);
+		End;
+		Big Message(All Players(All Teams), Custom String("Changing Map Early"));
+		Wait(0.500, Ignore Condition);
+		Declare Player Victory(First Of(Sorted Array(All Players(All Teams), Score Of(Current Array Element))));
+	}
+}
+
+rule("Dynamic Timer + Dynamic Scoring")
+{
+	event
+	{
+		Player Joined Match;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+	}
+
+	actions
+	{
+		Set Player Score(Event Player, First Of(Sorted Array(All Players(All Teams), Score Of(Event Player))));
+		If(Match Time < 360);
+			Set Match Time(Match Time + 60);
+		Else;
+			Set Match Time(420);
+		End;
+	}
+}
